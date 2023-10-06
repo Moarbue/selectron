@@ -7,7 +7,6 @@ void stack_init(stack_t *s)
 {
     s->s = STACK_DEFAULT_SIZE;
     s->c = -1;
-    free(s->e);
     s->e = (char *) malloc(s->s * sizeof (char));
 }
 
