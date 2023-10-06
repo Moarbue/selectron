@@ -51,6 +51,7 @@ int tokenize(const char exp[], token_t **tokens, size_t *count)
 
                 c = exp[++i];
             }
+            i--;
         } else if (isoperator(c)) {
             t->t = T_OPERATOR;
             t->c = c;
