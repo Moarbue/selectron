@@ -3,7 +3,7 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
-#define queue_is_empty(q) (q->f == (size_t)-1 || q->f > q->b)
+#define queue_is_empty(q) ((q)->f == (size_t)-1 || (q)->f > (q)->b)
 
 typedef struct {
     size_t s;   // size

@@ -3,7 +3,7 @@
 #ifndef STACK_H_
 #define STACK_H_
 
-#define stack_is_empty(s) (s->c == (size_t)-1)
+#define stack_is_empty(s) ((s)->c == (size_t)-1)
 
 typedef struct {
     size_t s;   // size
