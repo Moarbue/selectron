@@ -7,34 +7,34 @@ void stack_init(stack_t *s)
 {
     s->s = STACK_DEFAULT_SIZE;
     s->c = -1;
-    s->e = (char *) malloc(s->s * sizeof (char));
+    s->e = (token_t *) malloc(s->s * sizeof (token_t));
 }
 
-void stack_push(stack_t *s, char val)
+void stack_push(stack_t *s, token_t val)
 {
     s->c++;
 
     if (s->c+1 == s->s) {
         s->s *= 2;
-        s->e = (char *) realloc(s->e, s->s * sizeof (char));
+        s->e = (token_t *) realloc(s->e, s->s * sizeof (token_t));
     }
 
     s->e[s->c] = val;
 }
 
-char stack_pop(stack_t *s)
+token_t stack_pop(stack_t *s)
 {
     if (stack_is_empty(s)) {
-        exit(-10);
+        return (token_t) {.t = T_NO_TOKEN, .c = -1};
     }
 
     return s->e[s->c--];
 }
 
-char stack_peek(stack_t *s)
+token_t stack_peek(stack_t *s)
 {
     if (stack_is_empty(s)) {
-        exit(-10);
+        return (token_t) {.t = T_NO_TOKEN, .c = -1};
     }
 
     return s->e[s->c];

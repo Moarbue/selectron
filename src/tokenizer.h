@@ -17,6 +17,7 @@ enum Token {
     T_OPERATOR,
     T_LBRACKET,
     T_RBRACKET,
+    T_NO_TOKEN,
 };
 
 typedef struct {
