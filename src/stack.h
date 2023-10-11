@@ -20,4 +20,6 @@ token_t stack_pop(stack_t *s);
 
 token_t stack_peek(stack_t *s);
 
+void stack_free(stack_t *s);
+
 #endif // STACK_H_
