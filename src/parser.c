@@ -8,50 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-enum Operator_precedence {
-    OPP1 = 0,
-    OPP2 = 1,
-    OPP3 = 2,
-    OPP4 = 3,
-};
-
-size_t op_get_precedence(char op)
-{
-    switch (op) {
-        case '+':
-        case '-':
-        return OPP1;
-
-        case '*':
-        case '/':
-        return OPP2;
-
-        case '%':
-        return OPP3;
-
-        case '^':
-        return OPP4;
-
-        default: 
-        exit(-10);
-    };
-}
-
-bool op_greater_precedence(char op1, char op2)
-{
-    return (op_get_precedence(op1) > op_get_precedence(op2));
-}
-
-bool op_greater_equal_precedence(char op1, char op2)
-{
-    return (op_get_precedence(op1) >= op_get_precedence(op2));
-}
-
-bool op_left_assoc(char op)
-{
-    return !(op == '^');
-}
-
 error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
 {
     stack_t op_stack;
@@ -72,11 +28,15 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
             break;
             
             case T_OPERATOR:
-                while (!stack_is_empty(&op_stack) && stack_peek(&op_stack).t == T_OPERATOR &&
-                       ((op_left_assoc(t.c) && op_greater_equal_precedence(stack_peek(&op_stack).c, t.c)) ||
-                       (!op_left_assoc(t.c) && op_greater_precedence(stack_peek(&op_stack).c, t.c)))) {
+                token_t t2 = stack_peek(&op_stack);
+
+                while (!stack_is_empty(&op_stack) && t2.t == T_OPERATOR &&
+                       ((t.op.a == ASSOC_LEFT  && (t2.op.p >= t.op.p)) ||
+                        (t.op.a == ASSOC_RIGHT && (t2.op.p >  t.op.p)))) {
                     e = queue_enqueue(&res, stack_pop(&op_stack));
                     log_on_error(e);
+
+                    t2 = stack_peek(&op_stack);
                 }
                 e = stack_push(&op_stack, t);
                 log_on_error(e);
@@ -123,34 +83,10 @@ error_t eval_rpn(queue_t rpn, double *result)
             e = stack_push(&res, t);
             log_on_error(e);
         } else if (t.t == T_OPERATOR) {
-            double val2 = stack_pop(&res).n;
-            double val1 = stack_pop(&res).n;
-
-            switch (t.c) {
-                case '+':
-                    t.n = val1 + val2;
-                break;
-
-                case '-':
-                    t.n = val1 - val2;
-                break;
-
-                case '*':
-                    t.n = val1 * val2;
-                break;
-
-                case '/':
-                    t.n = val1 / val2;
-                break;
-
-                case '%':
-                    t.n = fmod(val1, val2);
-                break;
-
-                case '^':
-                    t.n = pow(val1, val2);
-                break;
-            }
+            double n2 = stack_pop(&res).n;
+            double n1 = stack_pop(&res).n;
+            
+            t.n = (*t.op.o)(n1, n2);
 
             e = stack_push(&res, t);
             log_on_error(e);

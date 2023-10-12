@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include "error.h"
+#include "operator.h"
 
 #ifndef TOKENIZER_H_
 #define TOKENIZER_H_
@@ -20,8 +21,11 @@ typedef struct {
     union {
         double n;
         char   c;
+        operator_t op;
     };
 } token_t;
+
+extern operator_t ops[];
 
 error_t tokenize(const char exp[], token_t **tokens, size_t *count);
 

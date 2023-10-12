@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define isoperator(c) (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%')
-
 // TODO: Better memory allocation of tokens
 // TODO: Recognize unary operators (e.g. -1)
 
@@ -66,8 +64,8 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
             }
             i--;
         } else if (isoperator(c)) {
-            t->t = T_OPERATOR;
-            t->c = c;
+            t->t  = T_OPERATOR;
+            t->op = char_to_op(c);
         } else if (c == '(') {
             t->t = T_LBRACKET;
             t->c = c;
