@@ -52,12 +52,18 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
                     e = queue_enqueue(&res, stack_pop(&op_stack));
                     log_on_error(e);
                 }
+                if (stack_is_empty(&op_stack))
+                    return error(ERROR_MISMATCHED_PARENTHESES, "There are mismatched parentheses in the expression");
+
                 stack_pop(&op_stack);
             break;
         }
     }
     
     while (!stack_is_empty(&op_stack)) {
+        if (stack_peek(&op_stack).t == T_LBRACKET)
+            return error(ERROR_MISMATCHED_PARENTHESES, "There are mismatched parentheses in the expression");
+
         e = queue_enqueue(&res, stack_pop(&op_stack));
         log_on_error(e);
     }
