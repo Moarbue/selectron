@@ -5,27 +5,37 @@
 
 void stack_init(stack_t *s)
 {
-    s->s = STACK_DEFAULT_SIZE;
+    s->s = 0;
     s->c = -1;
-    s->e = (token_t *) malloc(s->s * sizeof (token_t));
+    s->e = NULL;
 }
 
-void stack_push(stack_t *s, token_t val)
+error_t stack_push(stack_t *s, token_t val)
 {
     s->c++;
 
-    if (s->c+1 == s->s) {
-        s->s *= 2;
-        s->e = (token_t *) realloc(s->e, s->s * sizeof (token_t));
+    if (s->c == s->s) {
+        if (s->e == NULL) {
+            s->s = STACK_DEFAULT_SIZE;
+            s->e = (token_t *) malloc((s->s+1) * sizeof (token_t));
+        } else {
+            s->s *= 2;
+            s->e = (token_t *) realloc(s->e, (s->s+1) * sizeof (token_t));
+        }
+
+        if (s->e == NULL)
+            return error(ERROR_NO_MEMORY, "Failed to allocate memory for stack!");
     }
 
     s->e[s->c] = val;
+
+    return error(ERROR_NO_ERROR, NULL);
 }
 
 token_t stack_pop(stack_t *s)
 {
     if (stack_is_empty(s)) {
-        return (token_t) {.t = T_NO_TOKEN, .c = -1};
+        return (token_t){0};
     }
 
     return s->e[s->c--];
@@ -34,7 +44,7 @@ token_t stack_pop(stack_t *s)
 token_t stack_peek(stack_t *s)
 {
     if (stack_is_empty(s)) {
-        return (token_t) {.t = T_NO_TOKEN, .c = -1};
+        return (token_t){0};
     }
 
     return s->e[s->c];

@@ -32,7 +32,7 @@ size_t op_get_precedence(char op)
         case '^':
         return OPP4;
 
-        default:
+        default: 
         exit(-10);
     };
 }
@@ -52,7 +52,7 @@ bool op_left_assoc(char op)
     return !(op == '^');
 }
 
-int shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
+error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
 {
     stack_t op_stack;
     stack_init(&op_stack);
@@ -60,30 +60,37 @@ int shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
     queue_t res;
     queue_init(&res);
 
+    error_t e;
+
     for (size_t i = 0; i < count; i++) {
         token_t t = tokens[i];
 
         switch (t.t) {
             case T_NUMBER:
-                queue_enqueue(&res, t);
+                e = queue_enqueue(&res, t);
+                log_on_error(e);
             break;
             
             case T_OPERATOR:
                 while (!stack_is_empty(&op_stack) && stack_peek(&op_stack).t == T_OPERATOR &&
                        ((op_left_assoc(t.c) && op_greater_equal_precedence(stack_peek(&op_stack).c, t.c)) ||
                        (!op_left_assoc(t.c) && op_greater_precedence(stack_peek(&op_stack).c, t.c)))) {
-                    queue_enqueue(&res, stack_pop(&op_stack));
+                    e = queue_enqueue(&res, stack_pop(&op_stack));
+                    log_on_error(e);
                 }
-                stack_push(&op_stack, t);
+                e = stack_push(&op_stack, t);
+                log_on_error(e);
             break;
 
             case T_LBRACKET:
-                stack_push(&op_stack, t);
+                e = stack_push(&op_stack, t);
+                log_on_error(e);
             break;
 
             case T_RBRACKET:
                 while (!stack_is_empty(&op_stack) && stack_peek(&op_stack).t != T_LBRACKET) {
-                    queue_enqueue(&res, stack_pop(&op_stack));
+                    e = queue_enqueue(&res, stack_pop(&op_stack));
+                    log_on_error(e);
                 }
                 stack_pop(&op_stack);
             break;
@@ -91,26 +98,30 @@ int shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
     }
     
     while (!stack_is_empty(&op_stack)) {
-        queue_enqueue(&res, stack_pop(&op_stack));
+        e = queue_enqueue(&res, stack_pop(&op_stack));
+        log_on_error(e);
     }
 
     *rpn = res;
 
     stack_free(&op_stack);
 
-    return 0;
+    return error(ERROR_NO_ERROR, NULL);
 }
 
-int eval_rpn(queue_t rpn, double *result)
+error_t eval_rpn(queue_t rpn, double *result)
 {
     stack_t res;
     stack_init(&res);
+
+    error_t e;
 
     while(!queue_is_empty(&rpn)) {
         token_t t = queue_dequeue(&rpn);
 
         if (t.t == T_NUMBER) {
-            stack_push(&res, t);
+            e = stack_push(&res, t);
+            log_on_error(e);
         } else if (t.t == T_OPERATOR) {
             double val2 = stack_pop(&res).n;
             double val1 = stack_pop(&res).n;
@@ -118,34 +129,31 @@ int eval_rpn(queue_t rpn, double *result)
             switch (t.c) {
                 case '+':
                     t.n = val1 + val2;
-                    stack_push(&res, t);
                 break;
 
                 case '-':
                     t.n = val1 - val2;
-                    stack_push(&res, t);
                 break;
 
                 case '*':
                     t.n = val1 * val2;
-                    stack_push(&res, t);
                 break;
 
                 case '/':
                     t.n = val1 / val2;
-                    stack_push(&res, t);
                 break;
 
                 case '%':
                     t.n = fmod(val1, val2);
-                    stack_push(&res, t);
                 break;
 
                 case '^':
                     t.n = pow(val1, val2);
-                    stack_push(&res, t);
                 break;
             }
+
+            e = stack_push(&res, t);
+            log_on_error(e);
         }
     }
 
@@ -158,7 +166,7 @@ int eval_rpn(queue_t rpn, double *result)
     stack_free(&res);
     queue_free(&rpn);
 
-    return 0;
+    return error(ERROR_NO_ERROR, NULL);
 }
 
 double evaluate(char exp[])
@@ -167,23 +175,16 @@ double evaluate(char exp[])
     size_t count;
     queue_t rpn;
     double result;
+    error_t e;
 
-    int res = tokenize(exp, &toks, &count);
-    switch (res) {
-        case ERROR_EXPRESSION_EMPTY:
-            fprintf(stderr, "ERROR: Failed to tokenize expression: Expression is empty!");
-        break;
-        case ERROR_EXCESS_DECIMAL_POINT:
-            fprintf(stderr, "ERROR: Failed to tokenize expression: Number has to many decimal points!");
-        break;
-        case ERROR_UNKNOWN_CHARACTER:
-            fprintf(stderr, "ERROR: Failed to tokenize expression: Unknown character!");
-        break;
-    }
+    e = tokenize(exp, &toks, &count);
+    log_on_error(e);
 
-    res = shunting_yard(toks, count, &rpn);
+    e = shunting_yard(toks, count, &rpn);
+    log_on_error(e);
 
-    res = eval_rpn(rpn, &result);
+    e = eval_rpn(rpn, &result);
+    log_on_error(e);
 
     return result;
 }

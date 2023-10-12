@@ -14,7 +14,7 @@ typedef struct {
 
 void stack_init(stack_t *s);
 
-void stack_push(stack_t *s, token_t val);
+error_t stack_push(stack_t *s, token_t val);
 
 token_t stack_pop(stack_t *s);
 

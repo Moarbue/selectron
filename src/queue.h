@@ -15,7 +15,7 @@ typedef struct {
 
 void queue_init(queue_t *q);
 
-void queue_enqueue(queue_t *q, token_t val);
+error_t queue_enqueue(queue_t *q, token_t val);
 
 token_t queue_dequeue(queue_t *q);
 

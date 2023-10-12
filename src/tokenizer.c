@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <malloc.h>
+#include <stdio.h>
 #include <string.h>
 
 #define isoperator(c) (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%')
@@ -9,9 +10,10 @@
 // TODO: Better memory allocation of tokens
 // TODO: Recognize unary operators (e.g. -1)
 
-int tokenize(const char exp[], token_t **tokens, size_t *count)
+error_t tokenize(const char exp[], token_t **tokens, size_t *count)
 {
-    if (exp == NULL || strlen(exp) == 0) return ERROR_EXPRESSION_EMPTY;
+    if (exp == NULL || strlen(exp) == 0) 
+        return error(ERROR_EXPRESSION_EMTPY, "Input expression is empty!");
 
     token_t *toks;
     token_t *t;
@@ -19,17 +21,28 @@ int tokenize(const char exp[], token_t **tokens, size_t *count)
     char c;
 
     n = 0;
-    toks = (token_t *) malloc((n+1) * sizeof(token_t));
+
+    toks = NULL;
     len = strlen(exp);
+
     for (size_t i = 0; i < len; i++) {
-        toks = realloc(toks, (n+1) * sizeof (token_t));
-        c =  exp [i];
+        c =  exp[i];
+
+        if (isspace(c)) 
+            continue;
+
+        if (toks == NULL) {
+            toks = malloc((n+1) * sizeof (token_t));
+        } else {
+            toks = realloc(toks, (n+1) * sizeof (token_t));
+        }
+        if (toks == NULL)
+            return error(ERROR_NO_MEMORY, "Failed to allocate memory for tokens!");
+
         t = &toks[n];
         n++;
         
-        if (isspace(c)) 
-            continue;
-        else if (isdigit(c)) {
+        if (isdigit(c)) {
             t->t = T_NUMBER;
             t->n = 0.0;
 
@@ -45,7 +58,7 @@ int tokenize(const char exp[], token_t **tokens, size_t *count)
                         t->n = t->n * 10 + (c - '0');
                 } else if (c == DECIMAL_DELIMITER) {
                     if (isdec) 
-                        return ERROR_EXCESS_DECIMAL_POINT;
+                        return error(ERROR_EXCESS_DECIMAL_DELIM, "Excess decimal delimiter at character %.*s<-", i+1, exp);
                     isdec = true;
                 }
 
@@ -62,11 +75,14 @@ int tokenize(const char exp[], token_t **tokens, size_t *count)
             t->t = T_RBRACKET;
             t->c = c;
         } else
-            return ERROR_UNKNOWN_CHARACTER;
+            return error(ERROR_UNKNOWN_CHARACTER, "Unknown character at %.*s<-'", i+1, exp);
     }
+
+    if (n == 0)
+        return error(ERROR_EXPRESSION_EMTPY, "Input expression is empty!");
 
     *tokens = toks;
     *count  = n;
 
-    return TOKENIZE_SUCCESS;
+    return error(ERROR_NO_ERROR, NULL);
 }
