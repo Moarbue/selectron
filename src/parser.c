@@ -14,11 +14,11 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
 
     stack_t op_stack;
     e = stack_init(&op_stack);
-    log_on_error(e);
+    return_on_error(e);
 
     queue_t res;
     e = queue_init(&res);
-    log_on_error(e);
+    return_on_error(e);
 
     for (size_t i = 0; i < count; i++) {
         token_t t = tokens[i];
@@ -26,12 +26,12 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
         switch (t.t) {
             case T_NUMBER:
                 e = queue_enqueue(&res, t);
-                log_on_error(e);
+                return_on_error(e);
             break;
 
             case T_FUNCTION:
                 e = stack_push(&op_stack, t);
-                log_on_error(e);
+                return_on_error(e);
             break;
             
             case T_OPERATOR:
@@ -41,30 +41,30 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
                        ((t.op.a == ASSOC_LEFT  && (t2.op.p >= t.op.p)) ||
                         (t.op.a == ASSOC_RIGHT && (t2.op.p >  t.op.p)))) {
                     e = queue_enqueue(&res, stack_pop(&op_stack));
-                    log_on_error(e);
+                    return_on_error(e);
 
                     t2 = stack_peek(&op_stack);
                 }
                 e = stack_push(&op_stack, t);
-                log_on_error(e);
+                return_on_error(e);
             break;
 
             case T_COMMA:
                 while (stack_peek(&op_stack).t != T_LBRACKET) {
                     e = queue_enqueue(&res, stack_pop(&op_stack));
-                    log_on_error(e);
+                    return_on_error(e);
                 }
             break;
 
             case T_LBRACKET:
                 e = stack_push(&op_stack, t);
-                log_on_error(e);
+                return_on_error(e);
             break;
 
             case T_RBRACKET:
                 while (!stack_is_empty(&op_stack) && stack_peek(&op_stack).t != T_LBRACKET) {
                     e = queue_enqueue(&res, stack_pop(&op_stack));
-                    log_on_error(e);
+                    return_on_error(e);
                 }
                 if (stack_is_empty(&op_stack))
                     return error(ERROR_MISMATCHED_PARENTHESES, "There are mismatched parentheses in the expression");
@@ -72,7 +72,7 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
                 stack_pop(&op_stack);
                 if (stack_peek(&op_stack).t == T_FUNCTION) {
                     e = queue_enqueue(&res, stack_pop(&op_stack));
-                    log_on_error(e);
+                    return_on_error(e);
                 }
             break;
         }
@@ -83,7 +83,7 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
             return error(ERROR_MISMATCHED_PARENTHESES, "There are mismatched parentheses in the expression");
 
         e = queue_enqueue(&res, stack_pop(&op_stack));
-        log_on_error(e);
+        return_on_error(e);
     }
 
     *rpn = res;
@@ -100,14 +100,14 @@ error_t eval_rpn(queue_t rpn, double *result)
 
     stack_t res;
     e = stack_init(&res);
-    log_on_error(e);
+    return_on_error(e);
 
     while(!queue_is_empty(&rpn)) {
         token_t t = queue_dequeue(&rpn);
 
         if (t.t == T_NUMBER) {
             e = stack_push(&res, t);
-            log_on_error(e);
+            return_on_error(e);
         } else if (t.t == T_OPERATOR || t.t == T_FUNCTION) {
             double n2, n1;
 
@@ -122,7 +122,7 @@ error_t eval_rpn(queue_t rpn, double *result)
             t.n = (*t.op.o)(n1, n2);
 
             e = stack_push(&res, t);
-            log_on_error(e);
+            return_on_error(e);
         }
     }
 

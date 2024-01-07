@@ -6,6 +6,7 @@
 #include <string.h>
 
 #define INITIAL_TOKENS_CAPACITY 16
+#define MAXIMAL_FUNCTION_LENGTH 128
 
 error_t token_add(token_t **tokens, size_t *count, token_t t)
 {
@@ -57,6 +58,7 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
     if (exp == NULL || strlen(exp) == 0) 
         return error(ERROR_EXPRESSION_EMTPY, "Input expression is empty!");
 
+    error_t e;
     token_t *toks, prev;
     size_t n, len;
     char c;
@@ -74,58 +76,91 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
             continue;
 
         if (isdigit(c)) {
+
             if (n > 0 && prev.t == T_RBRACKET) {
-                token_add(&toks, &n, (token_t) {.t = T_OPERATOR, .op = char_to_op('*')});
+                e = token_add(&toks, &n, (token_t) {.t = T_OPERATOR, .op = char_to_op('*')});
+                return_on_error(e);
             }
 
             double num;
-            str_to_num(exp, &i, &num);
-            token_add(&toks, &n, (token_t){.t = T_NUMBER, .n = num});
+            e = str_to_num(exp, &i, &num);
+            return_on_error(e);
+            e = token_add(&toks, &n, (token_t){.t = T_NUMBER, .n = num});
+            return_on_error(e);
 
         } else if (isalpha(c)) {
-            char fun[128] = {0};
+
+            char fun[MAXIMAL_FUNCTION_LENGTH] = {0};
             size_t j = 0;
 
             while (isalpha(c)) {
                 fun[j++] = c;
+
                 if (isfunction(fun) && !isalpha(exp[i+1])) {
                     if (n > 0 && (prev.t == T_RBRACKET || prev.t == T_NUMBER)) {
-                        token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('*')});
+                        e = token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('*')});
+                        return_on_error(e);
                     }
 
-                    token_add(&toks, &n, (token_t){.t = T_FUNCTION, .op = str_to_op(fun)});
+                    e = token_add(&toks, &n, (token_t){.t = T_FUNCTION, .op = str_to_op(fun)});
+                    return_on_error(e);
                     break;
                 }
                 c = exp[++i];
             }
+
             if (!isfunction(fun))
-                return error(ERROR_UNKNOWN_EXPRESSION, "Unknown expression %.*s<-", i+1, exp);
+                return error(ERROR_UNKNOWN_EXPRESSION, "Unknown expression \'%s\'", fun);
+                
         } else if (isoperator(c)) {
+
             if (n == 0) {
-                if (c == '+')
-                    token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('p')});
-                else if (c == '-')
-                    token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('m')});
+                if (c == '+') {
+                    e = token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('p')});
+                    return_on_error(e);
+                }
+                else if (c == '-') {
+                    e = token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('m')});
+                    return_on_error(e);
+                }
                 else
                     return error(ERROR_LEADING_OPERATOR, "Leading operator \'%c\' is not allowed", c);
             } else if (n > 0) {
                 if (prev.t == T_OPERATOR || prev.t == T_LBRACKET) {
-                    if (c == '+')
-                        token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('p')});
-                    else if (c == '-')
-                        token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('m')});
-                } else
-                    token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op(c)});
+                    if (c == '+') {
+                        e = token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('p')});
+                        return_on_error(e);
+                    }
+                    else if (c == '-') {
+                        e = token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('m')});
+                        return_on_error(e);
+                    }
+                } else {
+                    e = token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op(c)});
+                    return_on_error(e);
+                }
             }
+
         } else if (c == ',') {
-            token_add(&toks, &n, (token_t){.t = T_COMMA, .c = c});
+
+            e = token_add(&toks, &n, (token_t){.t = T_COMMA, .c = c});
+            return_on_error(e);
+
         } else if (c == '(') {
+
             if (n > 0 && (prev.t == T_RBRACKET || prev.t == T_NUMBER)) {
-                token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('*')});
+                e = token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('*')});
+                return_on_error(e);
             }
-            token_add(&toks, &n, (token_t){.t = T_LBRACKET, .c = c});
+
+            e = token_add(&toks, &n, (token_t){.t = T_LBRACKET, .c = c});
+            return_on_error(e);
+
         } else if (c == ')') {
-            token_add(&toks, &n, (token_t){.t = T_RBRACKET, .c = c});
+            
+            e = token_add(&toks, &n, (token_t){.t = T_RBRACKET, .c = c});
+            return_on_error(e);
+
         } else
             return error(ERROR_UNKNOWN_CHARACTER, "Unknown character at %.*s<-'", i+1, exp);
     }
