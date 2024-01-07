@@ -25,8 +25,6 @@ typedef struct {
     };
 } token_t;
 
-extern operator_t ops[];
-
 error_t tokenize(const char exp[], token_t **tokens, size_t *count);
 
 #endif // TOKENIZER_H_

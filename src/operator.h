@@ -22,6 +22,7 @@ enum operation_t {
     OP_DIV,
     OP_MOD,
     OP_POW,
+    OP_NEG,
     OP_COUNT,
 };
 
@@ -32,7 +33,7 @@ typedef struct {
     operation o;
 } operator_t;
 
-#define op_init(ch, pr, as, op) ((operator_t){.c = (ch), .p = (pr), .a = (as), .o = (op)})
+extern operator_t ops[];
 
 int isoperator(const char c);
 operator_t char_to_op(const char c);
