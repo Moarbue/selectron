@@ -1,4 +1,5 @@
 #include "operator.h"
+#include <stddef.h>
 #include <math.h>
 
 double op_add(double n1, double n2);
