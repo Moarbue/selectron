@@ -39,6 +39,7 @@ error_t queue_enqueue(queue_t *q, token_t val)
 token_t queue_dequeue(queue_t *q)
 {
     if (queue_is_empty(q)) {
+        log_on_error(error(ERROR_QUEUE_EMPTY, "Queue is empty"));
         return (token_t){0};
     }
 

@@ -34,6 +34,7 @@ error_t stack_push(stack_t *s, token_t val)
 token_t stack_pop(stack_t *s)
 {
     if (stack_is_empty(s)) {
+        log_on_error(error(ERROR_STACK_EMPTY, "Stack is empty"));
         return (token_t){0};
     }
 
@@ -43,6 +44,7 @@ token_t stack_pop(stack_t *s)
 token_t stack_peek(stack_t *s)
 {
     if (stack_is_empty(s)) {
+        log_on_error(error(ERROR_STACK_EMPTY, "Stack is empty"));
         return (token_t){0};
     }
 
