@@ -10,7 +10,8 @@
 #endif
 
 enum Token {
-    T_NUMBER = 0,
+    T_DUMMY = 0,
+    T_NUMBER,
     T_FUNCTION,
     T_OPERATOR,
     T_COMMA,
