@@ -1,16 +1,16 @@
+#include <stddef.h>
+
 #ifndef OPERATOR_H_
 #define OPERATOR_H_
 
 #define USE_DEGREES 1
 
-typedef double (*operation)(double n1, double n2);
+typedef double (*operation)(double nums[]);
 
 typedef enum {
     PREC_0,
     PREC_1,
     PREC_2,
-    PREC_3,
-    PREC_4,
 } op_precedence;
 
 typedef enum {
@@ -34,6 +34,7 @@ enum function_t {
     FUN_SIN,
     FUN_COS,
     FUN_TAN,
+    FUN_MAX,
     FUN_COUNT,
 };
 
@@ -42,6 +43,7 @@ typedef struct {
     op_precedence p;
     op_associativity a;
     operation o;
+    size_t argc;
 } operator_t;
 
 extern operator_t ops[];

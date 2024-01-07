@@ -4,37 +4,39 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-double op_add(double n1, double n2);
-double op_sub(double n1, double n2);
-double op_mul(double n1, double n2);
-double op_div(double n1, double n2);
-double op_mod(double n1, double n2);
-double op_pow(double n1, double n2);
-double op_kep(double n1, double n2);
-double op_neg(double n1, double n2);
+double op_add(double nums[]);
+double op_sub(double nums[]);
+double op_mul(double nums[]);
+double op_div(double nums[]);
+double op_mod(double nums[]);
+double op_pow(double nums[]);
+double op_kep(double nums[]);
+double op_neg(double nums[]);
 
-double fun_sin(double n1, double n2);
-double fun_cos(double n1, double n2);
-double fun_tan(double n1, double n2);
+double fun_sin(double nums[]);
+double fun_cos(double nums[]);
+double fun_tan(double nums[]);
+double fun_max(double nums[]);
 
-#define op_init(ch, pr, as, op) ((operator_t){.c = (ch), .p = (pr), .a = (as), .o = (op)})
-#define func_init(ch, op) ((operator_t){.c = (ch), .p = (0), .a = (0), .o = (op)})
+#define op_init(ch, pr, as, op, count) ((operator_t){.c = (ch), .p = (pr), .a = (as), .o = (op), .argc = (count)})
+#define func_init(ch, op, count) ((operator_t){.c = (ch), .p = (0), .a = (0), .o = (op), .argc = (count)})
 
 operator_t ops[] = {
-    [OP_ADD] = op_init("+",   PREC_0, ASSOC_LEFT,  op_add),
-    [OP_SUB] = op_init("-",   PREC_0, ASSOC_LEFT,  op_sub),
-    [OP_MUL] = op_init("*",   PREC_1, ASSOC_LEFT,  op_mul),
-    [OP_DIV] = op_init("/",   PREC_1, ASSOC_LEFT,  op_div),
-    [OP_MOD] = op_init("%",   PREC_1, ASSOC_LEFT,  op_mod),
-    [OP_POW] = op_init("^",   PREC_2, ASSOC_RIGHT, op_pow),
-    [OP_KEP] = op_init("p",   PREC_3, ASSOC_RIGHT, op_kep),
-    [OP_NEG] = op_init("m",   PREC_3, ASSOC_RIGHT, op_neg),
+    [OP_ADD] = op_init("+",   PREC_0, ASSOC_LEFT,  op_add, 2),
+    [OP_SUB] = op_init("-",   PREC_0, ASSOC_LEFT,  op_sub, 2),
+    [OP_MUL] = op_init("*",   PREC_1, ASSOC_LEFT,  op_mul, 2),
+    [OP_DIV] = op_init("/",   PREC_1, ASSOC_LEFT,  op_div, 2),
+    [OP_MOD] = op_init("%",   PREC_1, ASSOC_LEFT,  op_mod, 2),
+    [OP_POW] = op_init("^",   PREC_2, ASSOC_RIGHT, op_pow, 2),
+    [OP_KEP] = op_init("p",   PREC_2, ASSOC_RIGHT, op_kep, 1),
+    [OP_NEG] = op_init("m",   PREC_2, ASSOC_RIGHT, op_neg, 1),
 };
 
 operator_t funcs[] = {
-    [FUN_SIN] = func_init("sin", fun_sin),
-    [FUN_COS] = func_init("cos", fun_cos),
-    [FUN_TAN] = func_init("tan", fun_tan),
+    [FUN_SIN] = func_init("sin", fun_sin, 1),
+    [FUN_COS] = func_init("cos", fun_cos, 1),
+    [FUN_TAN] = func_init("tan", fun_tan, 1),
+    [FUN_MAX] = func_init("max", fun_max, 2),
 };
 
 int isoperator(const char c)
@@ -77,65 +79,65 @@ operator_t str_to_op(char *s)
 }
 
 
-double op_add(double n1, double n2)
+double op_add(double nums[])
 {
-    return n1 + n2;
+    return nums[0] + nums[1];
 }
 
-double op_sub(double n1, double n2)
+double op_sub(double nums[])
 {
-    return n1 - n2;
+    return nums[0] - nums[1];
 }
 
-double op_mul(double n1, double n2)
+double op_mul(double nums[])
 {
-    return n1 * n2;
+    return nums[0] * nums[1];
 }
 
-double op_div(double n1, double n2)
+double op_div(double nums[])
 {
-    return n1 / n2;
+    return nums[0] / nums[1];
 }
 
-double op_mod(double n1, double n2)
+double op_mod(double nums[])
 {
-    return fmod(n1, n2);
+    return fmod(nums[0], nums[1]);
 }
 
-double op_pow(double n1, double n2)
+double op_pow(double nums[])
 {
-    return pow(n1, n2);
+    return pow(nums[0], nums[1]);
 }
 
-double op_kep(double n1, double n2)
+double op_kep(double nums[])
 {
-    (void) n2;
-    return n1;
+    return nums[0];
 }
 
-double op_neg(double n1, double n2)
+double op_neg(double nums[])
 {
-    (void) n2;
-    return -n1;
+    return -nums[0];
 }
 
-double fun_sin(double n1, double n2)
+double fun_sin(double nums[])
 {
-    (void) n2;
-    if (USE_DEGREES) {
-        n1 *= M_PI / 180;
-    }
-    return sin(n1);
+    if (USE_DEGREES) nums[0] *= M_PI / 180.0;
+    return sin(nums[0]);
 }
 
-double fun_cos(double n1, double n2)
+double fun_cos(double nums[])
 {
-    (void) n2;
-    return cos(n1);
+    if (USE_DEGREES) nums[0] *= M_PI / 180.0;
+    return cos(nums[0]);
 }
 
-double fun_tan(double n1, double n2)
+double fun_tan(double nums[])
 {
-    (void) n2;
-    return tan(n1);
+    if (USE_DEGREES) nums[0] *= M_PI / 180.0;
+    return tan(nums[0]);
+}
+
+double fun_max(double nums[])
+{
+    return fmax(nums[0], nums[1]);
 }

@@ -109,17 +109,15 @@ error_t eval_rpn(queue_t rpn, double *result)
             e = stack_push(&res, t);
             return_on_error(e);
         } else if (t.t == T_OPERATOR || t.t == T_FUNCTION) {
-            double n2, n1;
-
-            if (t.t == T_FUNCTION ||
-                (t.t == T_OPERATOR && (t.op.c[0] == 'p' || t.op.c[0] == 'm')))
-                n1 = stack_pop(&res).n;
-            else {
-                n2 = stack_pop(&res).n;
-                n1 = stack_pop(&res).n;
-            }
+            double *nums = (double *) malloc(t.op.argc * sizeof (double));
+            if (nums == NULL)
+                return error(ERROR_NO_MEMORY, "Failed to allocate memory for function parameters of \'%s\'", t.op.c);
             
-            t.n = (*t.op.o)(n1, n2);
+            for (size_t i = 0; i < t.op.argc; i++) {
+                nums[i] = stack_pop(&res).n;
+            }
+            t.n = (*t.op.o)(nums);
+            free(nums);
 
             e = stack_push(&res, t);
             return_on_error(e);
