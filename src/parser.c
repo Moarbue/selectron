@@ -110,15 +110,23 @@ error_t eval_rpn(queue_t rpn, double *result)
             return_on_error(e);
         } else if (t.t == T_OPERATOR || t.t == T_FUNCTION) {
             double *nums = (double *) malloc(t.op.argc * sizeof (double));
+            double ans;
+
             if (nums == NULL)
                 return error(ERROR_NO_MEMORY, "Failed to allocate memory for function parameters of \'%s\'", t.op.c);
             
             for (size_t i = t.op.argc - 1; i < t.op.argc; i--) {
                 nums[i] = stack_pop(&res).n;
             }
-            t.n = (*t.op.o)(nums);
+            
+            ans = (*t.op.o)(nums);
             free(nums);
 
+            if (isnan(ans)) {
+                return error(ERROR_CALCULATION, "Failed to calculate \'%s()\'", t.op.c);
+            }
+
+            t.n = ans;
             e = stack_push(&res, t);
             return_on_error(e);
         }
