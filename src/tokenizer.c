@@ -41,7 +41,7 @@ error_t str_to_num(const char *exp, size_t *i, double *num)
                 n = n * 10 + (c - '0');
         } else if (c == DECIMAL_DELIMITER) {
             if (isdec) 
-                return error(ERROR_EXCESS_DECIMAL_DELIM, "Excess decimal delimiter at character %.*s<-", i+1, exp);
+                return error(ERROR_EXCESS_DECIMAL_DELIM, "Excess decimal delimiter at character %.*s<-", *i+1, exp);
             isdec = true;
         }
 
@@ -80,6 +80,9 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
             if (n > 0 && prev.t == T_RBRACKET) {
                 e = token_add(&toks, &n, (token_t) {.t = T_OPERATOR, .op = char_to_op('*')});
                 return_on_error(e);
+            } else if (n > 0 && prev.t == T_FUNCTION) {
+                e = token_add(&toks, &n, (token_t){.t = T_LBRACKET, .c = '('});
+                return_on_error(e);
             }
 
             double num;
@@ -87,6 +90,11 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
             return_on_error(e);
             e = token_add(&toks, &n, (token_t){.t = T_NUMBER, .n = num});
             return_on_error(e);
+
+            if (n > 0 && prev.t == T_FUNCTION) {
+                e = token_add(&toks, &n, (token_t){.t = T_RBRACKET, .c = ')'});
+                return_on_error(e);
+            }
 
         } else if (isalpha(c)) {
 
