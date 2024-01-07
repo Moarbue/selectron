@@ -93,7 +93,7 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
 
     for (size_t i = 0; i < len; i++) {
         c  = exp[i];
-        prev = n > 0 ? toks[n-1] : prev;
+        prev = n > 0 ? toks[n-1] : (token_t){0};
 
         if (isspace(c)) 
             continue;
