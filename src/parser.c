@@ -113,7 +113,7 @@ error_t eval_rpn(queue_t rpn, double *result)
             if (nums == NULL)
                 return error(ERROR_NO_MEMORY, "Failed to allocate memory for function parameters of \'%s\'", t.op.c);
             
-            for (size_t i = 0; i < t.op.argc; i++) {
+            for (size_t i = t.op.argc - 1; i < t.op.argc; i--) {
                 nums[i] = stack_pop(&res).n;
             }
             t.n = (*t.op.o)(nums);
