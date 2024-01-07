@@ -22,6 +22,7 @@ enum operation_t {
     OP_DIV,
     OP_MOD,
     OP_POW,
+    OP_KEP,
     OP_NEG,
     OP_COUNT,
 };

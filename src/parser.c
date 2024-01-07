@@ -90,8 +90,13 @@ error_t eval_rpn(queue_t rpn, double *result)
             e = stack_push(&res, t);
             log_on_error(e);
         } else if (t.t == T_OPERATOR) {
-            double n2 = stack_pop(&res).n;
-            double n1 = stack_pop(&res).n;
+            double n2, n1;
+
+            if (t.op.c == 'p' || t.op.c == 'm') n1 = stack_pop(&res).n;
+            else {
+                n2 = stack_pop(&res).n;
+                n1 = stack_pop(&res).n;
+            }
             
             t.n = (*t.op.o)(n1, n2);
 
