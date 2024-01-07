@@ -5,7 +5,7 @@
 
 error_t stack_init(stack_t *s)
 {
-    s->s = 0;
+    s->s = STACK_DEFAULT_SIZE;
     s->c = -1;
     s->e = (token_t *) malloc(s->s * sizeof (token_t));
     if (s->e == NULL)
