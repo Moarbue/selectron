@@ -43,28 +43,34 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
         n++;
         
         if (isdigit(c)) {
-            t->t = T_NUMBER;
-            t->n = 0.0;
-
-            bool   isdec   = false;
-            double divisor = 10.0;
-
-            while (isdigit(c) || c == DECIMAL_DELIMITER) {
-                if (isdigit(c)) {
-                    if (isdec) {
-                        t->n += (double)(c - '0') / divisor;
-                        divisor *= 10.0;
-                    } else 
-                        t->n = t->n * 10 + (c - '0');
-                } else if (c == DECIMAL_DELIMITER) {
-                    if (isdec) 
-                        return error(ERROR_EXCESS_DECIMAL_DELIM, "Excess decimal delimiter at character %.*s<-", i+1, exp);
-                    isdec = true;
+            if (n > 1 && (toks[n-2].t == T_RBRACKET || toks[n-2].t == T_FUNCTION)) {
+                t->t  = T_OPERATOR;
+                t->op = char_to_op('*');
+                i--;
+            } else {
+                t->t = T_NUMBER;
+                t->n = 0.0;
+    
+                bool   isdec   = false;
+                double divisor = 10.0;
+    
+                while (isdigit(c) || c == DECIMAL_DELIMITER) {
+                    if (isdigit(c)) {
+                        if (isdec) {
+                            t->n += (double)(c - '0') / divisor;
+                            divisor *= 10.0;
+                        } else 
+                            t->n = t->n * 10 + (c - '0');
+                    } else if (c == DECIMAL_DELIMITER) {
+                        if (isdec) 
+                            return error(ERROR_EXCESS_DECIMAL_DELIM, "Excess decimal delimiter at character %.*s<-", i+1, exp);
+                        isdec = true;
+                    }
+    
+                    c = exp[++i];
                 }
-
-                c = exp[++i];
+                i--;
             }
-            i--;
         } else if (isalpha(c)) {
             char fun[128] = {0};
             size_t j = 0;
@@ -101,7 +107,7 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
             t->t = T_COMMA;
             t->c = c;
         } else if (c == '(') {
-            if (n > 1 && toks[n-2].t == T_RBRACKET) {
+            if (n > 1 && (toks[n-2].t == T_RBRACKET || toks[n-2].t == T_NUMBER)) {
                 t->t  = T_OPERATOR;
                 t->op = char_to_op('*');
                 i--;
