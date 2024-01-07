@@ -69,10 +69,24 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
             i--;
         } else if (isoperator(c)) {
             t->t  = T_OPERATOR;
-            t->op = char_to_op(c);
+            if (n == 1) {
+                t->op = char_to_op(c == '+' ? 'p' : c == '-' ? 'm' : c);
+            }
+            else if (n > 1) {
+                if (toks[n-2].t == T_OPERATOR || toks[n-2].t == T_LBRACKET)
+                    t->op = char_to_op(c == '+' ? 'p' : c == '-' ? 'm' : c);
+                else
+                    t->op = char_to_op(c);
+            }
         } else if (c == '(') {
-            t->t = T_LBRACKET;
-            t->c = c;
+            if (n > 1 && toks[n-2].t == T_RBRACKET) {
+                t->t  = T_OPERATOR;
+                t->op = char_to_op('*');
+                i--;
+            } else {
+                t->t = T_LBRACKET;
+                t->c = c;
+            }
         } else if (c == ')') {
             t->t = T_RBRACKET;
             t->c = c;
