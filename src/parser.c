@@ -70,6 +70,7 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
 
     *rpn = res;
 
+    free(tokens);
     stack_free(&op_stack);
 
     return error(ERROR_NO_ERROR, NULL);
