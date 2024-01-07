@@ -13,7 +13,7 @@ typedef struct {
     token_t *e;
 } queue_t;
 
-void queue_init(queue_t *q);
+error_t queue_init(queue_t *q);
 
 error_t queue_enqueue(queue_t *q, token_t val);
 

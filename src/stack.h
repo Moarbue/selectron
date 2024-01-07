@@ -12,7 +12,7 @@ typedef struct {
     token_t *e;
 } stack_t;
 
-void stack_init(stack_t *s);
+error_t stack_init(stack_t *s);
 
 error_t stack_push(stack_t *s, token_t val);
 
