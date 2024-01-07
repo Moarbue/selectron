@@ -9,7 +9,7 @@ int main(int argc, char **argv)
         return -1; 
     }
 
-    printf("%s = %lf\n", argv[1], evaluate(argv[1]));
+    printf("%s = %.7lg\n", argv[1], evaluate(argv[1]));
 
     return 0;
 }
