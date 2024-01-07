@@ -5,7 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
-// TODO: Better memory allocation of tokens
+#define INITIAL_TOKENS_CAPACITY 16
+
 // TODO: Recognize unary operators (e.g. -1)
 
 error_t tokenize(const char exp[], token_t **tokens, size_t *count)
@@ -15,13 +16,17 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
 
     token_t *toks;
     token_t *t;
-    size_t n, len;
+    size_t n, s, len;
     char c;
 
     n = 0;
-
-    toks = NULL;
+    s = INITIAL_TOKENS_CAPACITY;
     len = strlen(exp);
+
+    toks = (token_t *) malloc(s * sizeof (token_t));
+    if (toks == NULL)
+        return error(ERROR_NO_MEMORY, "Failed to allocate memory for tokens!");
+
 
     for (size_t i = 0; i < len; i++) {
         c =  exp[i];
@@ -29,13 +34,12 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
         if (isspace(c)) 
             continue;
 
-        if (toks == NULL) {
-            toks = malloc((n+1) * sizeof (token_t));
-        } else {
-            toks = realloc(toks, (n+1) * sizeof (token_t));
+        if ((n+1) > s) {
+            s *= 2;
+            toks = (token_t *) realloc(toks, s * sizeof (token_t));
+            if (toks == NULL)
+                return error(ERROR_NO_MEMORY, "Failed to allocate memory for tokens!");
         }
-        if (toks == NULL)
-            return error(ERROR_NO_MEMORY, "Failed to allocate memory for tokens!");
 
         t = &toks[n];
         n++;
