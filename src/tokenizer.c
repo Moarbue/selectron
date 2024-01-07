@@ -7,8 +7,6 @@
 
 #define INITIAL_TOKENS_CAPACITY 16
 
-// TODO: Recognize unary operators (e.g. -1)
-
 error_t tokenize(const char exp[], token_t **tokens, size_t *count)
 {
     if (exp == NULL || strlen(exp) == 0) 
@@ -67,6 +65,27 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
                 c = exp[++i];
             }
             i--;
+        } else if (isalpha(c)) {
+            char fun[128] = {0};
+            size_t j = 0;
+
+            while (isalpha(c)) {
+                fun[j++] = c;
+                if (isfunction(fun)) {
+                    if (n > 1 && (toks[n-2].t == T_RBRACKET || toks[n-2].t == T_NUMBER)) {
+                        t->t  = T_OPERATOR;
+                        t->op = char_to_op('*');
+                        i -= j;
+                    } else {
+                        t->t = T_FUNCTION;
+                        t->op = str_to_op(fun);
+                    }
+                    break;
+                }
+                c = exp[++i];
+            }
+            if (!isfunction(fun))
+                return error(ERROR_UNKNOWN_EXPRESSION, "Unknown expression %.*s<-", i+1, exp);
         } else if (isoperator(c)) {
             t->t  = T_OPERATOR;
             if (n == 1) {
@@ -78,6 +97,9 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
                 else
                     t->op = char_to_op(c);
             }
+        } else if (c == ',') {
+            t->t = T_COMMA;
+            t->c = c;
         } else if (c == '(') {
             if (n > 1 && toks[n-2].t == T_RBRACKET) {
                 t->t  = T_OPERATOR;

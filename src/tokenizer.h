@@ -11,7 +11,9 @@
 
 enum Token {
     T_NUMBER = 0,
+    T_FUNCTION,
     T_OPERATOR,
+    T_COMMA,
     T_LBRACKET,
     T_RBRACKET,
 };
