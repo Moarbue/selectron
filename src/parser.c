@@ -10,13 +10,15 @@
 
 error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
 {
+    error_t e;
+
     stack_t op_stack;
-    stack_init(&op_stack);
+    e = stack_init(&op_stack);
+    log_on_error(e);
 
     queue_t res;
-    queue_init(&res);
-
-    error_t e;
+    e = queue_init(&res);
+    log_on_error(e);
 
     for (size_t i = 0; i < count; i++) {
         token_t t = tokens[i];
@@ -78,10 +80,11 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
 
 error_t eval_rpn(queue_t rpn, double *result)
 {
-    stack_t res;
-    stack_init(&res);
-
     error_t e;
+
+    stack_t res;
+    e = stack_init(&res);
+    log_on_error(e);
 
     while(!queue_is_empty(&rpn)) {
         token_t t = queue_dequeue(&rpn);
