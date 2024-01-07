@@ -53,6 +53,29 @@ error_t str_to_num(const char *exp, size_t *i, double *num)
     return error(ERROR_NO_ERROR, NULL);
 }
 
+void print_tokens(token_t *toks, size_t n)
+{
+    for (size_t i = 0; i < n; i++) {
+        switch (toks[i].t) {
+            case T_NUMBER:
+                printf("%lf", toks[i].n);
+            break;
+            case T_LBRACKET:
+            case T_RBRACKET:
+            case T_COMMA:
+                printf("%c", toks[i].c);
+            break;
+            case T_OPERATOR:
+            case T_FUNCTION:
+                printf("%s", toks[i].op.c);
+            break;
+            default:
+            break;
+        }
+    }
+    printf("\n");
+}
+
 error_t tokenize(const char exp[], token_t **tokens, size_t *count)
 {
     if (exp == NULL || strlen(exp) == 0) 
@@ -81,8 +104,17 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
                 e = token_add(&toks, &n, (token_t) {.t = T_OPERATOR, .op = char_to_op('*')});
                 return_on_error(e);
             } else if (n > 0 && prev.t == T_FUNCTION) {
-                e = token_add(&toks, &n, (token_t){.t = T_LBRACKET, .c = '('});
-                return_on_error(e);
+                if (prev.op.argc == 1) {
+                    e = token_add(&toks, &n, (token_t){.t = T_LBRACKET, .c = '('});
+                    return_on_error(e);
+                } else if (prev.op.argc == 0) {
+                    e = token_add(&toks, &n, (token_t){.t = T_LBRACKET, .c = '('});
+                    return_on_error(e);
+                    e = token_add(&toks, &n, (token_t){.t = T_RBRACKET, .c = ')'});
+                    return_on_error(e);
+                    e = token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op('*')});
+                    return_on_error(e);
+                }
             }
 
             double num;
@@ -92,8 +124,10 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
             return_on_error(e);
 
             if (n > 0 && prev.t == T_FUNCTION) {
-                e = token_add(&toks, &n, (token_t){.t = T_RBRACKET, .c = ')'});
-                return_on_error(e);
+                if (prev.op.argc == 1) {
+                    e = token_add(&toks, &n, (token_t){.t = T_LBRACKET, .c = '('});
+                    return_on_error(e);
+                }
             }
 
         } else if (isalpha(c)) {
@@ -144,6 +178,13 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
                         return_on_error(e);
                     }
                 } else {
+                    if (prev.t == T_FUNCTION && prev.op.argc == 0) {
+                        e = token_add(&toks, &n, (token_t){.t = T_LBRACKET, .c = '('});
+                        return_on_error(e);
+                        e = token_add(&toks, &n, (token_t){.t = T_RBRACKET, .c = ')'});
+                        return_on_error(e);
+                    }
+                    
                     e = token_add(&toks, &n, (token_t){.t = T_OPERATOR, .op = char_to_op(c)});
                     return_on_error(e);
                 }
@@ -175,6 +216,8 @@ error_t tokenize(const char exp[], token_t **tokens, size_t *count)
 
     if (n == 0)
         return error(ERROR_EXPRESSION_EMTPY, "Input expression is empty!");
+
+    print_tokens(toks, n);
 
     *tokens = toks;
     *count  = n;
