@@ -54,7 +54,7 @@ enum function_t {
 };
 
 typedef struct {
-    char *c;             // ASCII representation
+    char *name;             // ASCII representation
     op_precedence p;
     op_associativity a;
     operation o;

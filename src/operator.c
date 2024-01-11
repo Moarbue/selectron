@@ -36,8 +36,8 @@ double fun_ceil(double nums[]);
 double fun_e(double nums[]);
 double fun_pi(double nums[]);
 
-#define op_init(ch, pr, as, op, count) ((operator_t){.c = (ch), .p = (pr), .a = (as), .o = (op), .argc = (count)})
-#define func_init(ch, op, count) ((operator_t){.c = (ch), .p = (0), .a = (0), .o = (op), .argc = (count)})
+#define op_init(str, pr, as, op, count) ((operator_t){.name = (str), .p = (pr), .a = (as), .o = (op), .argc = (count)})
+#define func_init(str, op, count) ((operator_t){.name = (str), .p = (0), .a = (0), .o = (op), .argc = (count)})
 
 operator_t ops[] = {
     [OP_ADD] = op_init("+",   PREC_0, ASSOC_LEFT,  op_add, 2),
@@ -75,7 +75,7 @@ operator_t funcs[] = {
 int isoperator(const char c)
 {
     for (size_t i = 0; i < OP_COUNT; i++) {
-        if (c == ops[i].c[0]) return 1;
+        if (c == ops[i].name[0]) return 1;
     }
 
     return 0;
@@ -85,7 +85,7 @@ operator_t char_to_op(const char c)
 {
     size_t i = 0;
     for (i = 0; i < OP_COUNT; i++) {
-        if (c == ops[i].c[0]) break;
+        if (c == ops[i].name[0]) break;
     }
 
     return ops[i];
@@ -95,7 +95,7 @@ int isfunction(char *s)
 {
     size_t i = 0;
     for (i = 0; i < FUN_COUNT; i++) {
-        if (strcmp(s, funcs[i].c) == 0) return 1;
+        if (strcmp(s, funcs[i].name) == 0) return 1;
     }
 
     return 0;
@@ -105,10 +105,10 @@ operator_t str_to_op(char *s)
 {
     size_t i = 0;
     for (i = 0; i < FUN_COUNT; i++) {
-        if (strcmp(s, funcs[i].c) == 0) return funcs[i];
+        if (strcmp(s, funcs[i].name) == 0) return funcs[i];
     }
 
-    return funcs[i];
+    return funcs[0];
 }
 
 
