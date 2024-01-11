@@ -1,53 +1,41 @@
 #include "stack.h"
 #include <malloc.h>
 
-#define STACK_DEFAULT_SIZE 16
-
-error_t stack_init(stack_t *s)
+stack_t stack_init(void)
 {
-    s->s = STACK_DEFAULT_SIZE;
-    s->c = -1;
-    s->e = (token_t *) malloc(s->s * sizeof (token_t));
-    if (s->e == NULL)
-        return error(ERROR_NO_MEMORY, "Failed to allocate memory for stack!");
+    stack_t s;
 
-    return error(ERROR_NO_ERROR, NULL);
+    s.c = STACK_INITIAL_CAPACITY;
+    s.s = 0;
+    s.e = (_token *) malloc(s.c * sizeof (_token));
+    if (s.e == NULL) exit_on_error(error(ERROR_NO_MEMORY, "Failed to allocate memory for stack"));
+
+    return s;
 }
 
-error_t stack_push(stack_t *s, token_t val)
+void stack_push(stack_t *s, _token val)
 {
-    s->c++;
-
-    if (s->c == s->s) {
-        s->s *= 2;
-        s->e = (token_t *) realloc(s->e, s->s * sizeof (token_t));
-
-        if (s->e == NULL)
-            return error(ERROR_NO_MEMORY, "Failed to allocate memory for stack!");
+    if (++s->s >= s->c) {
+        s->c *= 2;
+        s->e = (_token *) realloc(s->e, s->c * sizeof (_token));
+        if (s->e == NULL) exit_on_error(error(ERROR_NO_MEMORY, "Failed to allocate memory for stack!"));
     }
 
-    s->e[s->c] = val;
-
-    return error(ERROR_NO_ERROR, NULL);
+    s->e[s->s-1] = val;
 }
 
-token_t stack_pop(stack_t *s)
+_token stack_pop(stack_t *s)
 {
-    if (stack_is_empty(s)) {
-        log_on_error(error(ERROR_STACK_EMPTY, "Stack is empty"));
-        return (token_t){0};
-    }
+    if (stack_is_empty(*s)) exit_on_error(error(ERROR_STACK_EMPTY, "Stack is empty"));
 
-    return s->e[s->c--];
+    return s->e[--s->s];
 }
 
-token_t stack_peek(stack_t *s)
+_token stack_peek(stack_t *s)
 {
-    if (stack_is_empty(s)) {
-        return (token_t){.t = T_DUMMY};
-    }
+    if (stack_is_empty(*s)) return dummy_token;
 
-    return s->e[s->c];
+    return s->e[s->s-1];
 }
 
 void stack_free(stack_t *s)

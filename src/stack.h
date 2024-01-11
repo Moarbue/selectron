@@ -1,24 +1,23 @@
 #include <stddef.h>
+#include "token.h"
 #include "tokenizer.h"
 
 #ifndef STACK_H_
 #define STACK_H_
 
-#define stack_is_empty(s) ((s)->c == (size_t)-1)
+#define STACK_INITIAL_CAPACITY 16
+#define stack_is_empty(stack) ((stack).s == 0)
 
 typedef struct {
-    size_t s;   // size
     size_t c;   // capacity
-    token_t *e;
+    size_t s;   // size
+    _token *e;  // tokens
 } stack_t;
 
-error_t stack_init(stack_t *s);
-
-error_t stack_push(stack_t *s, token_t val);
-
-token_t stack_pop(stack_t *s);
-
-token_t stack_peek(stack_t *s);
+stack_t stack_init(void);
+void    stack_push(stack_t *s, _token val);
+_token  stack_pop(stack_t *s);
+_token  stack_peek(stack_t *s);
 
 void stack_free(stack_t *s);
 
