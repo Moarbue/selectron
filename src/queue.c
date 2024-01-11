@@ -1,47 +1,36 @@
 #include "queue.h"
 #include <malloc.h>
 
-#define QUEUE_DEFAULT_SIZE 16
-
-error_t queue_init(queue_t *q)
+queue_t queue_init(void)
 {
-    q->s = QUEUE_DEFAULT_SIZE;
-    q->f = -1;
-    q->b = -1;
-    q->e = (token_t *) malloc(q->s * sizeof (token_t));
-    if (q->e == NULL)
-        return error(ERROR_NO_MEMORY, "Failed to allocate memory for queue!");
+    queue_t q;
 
-    return error(ERROR_NO_ERROR, NULL);
+    q.c = QUEUE_INITIAL_CAPACITY;
+    q.f = -1;
+    q.b = -1;
+    q.e = (_token *) malloc(q.c * sizeof (_token));
+    if (q.e == NULL) exit_on_error(error(ERROR_NO_MEMORY, "Failed to allocate memory for queue!"));
+
+    return q;
 }
 
-error_t queue_enqueue(queue_t *q, token_t val)
+void queue_enqueue(queue_t *q, _token val)
 {
-    q->b++;
-
-    if (q->b == q->s) {
-        q->s *= 2;
-        q->e = (token_t *) realloc(q->e, q->s * sizeof (token_t));
+    if (++q->b >= q->c) {
+        q->c *= 2;
+        q->e = (_token *) realloc(q->e, q->c * sizeof (_token));
         
-        if (q->e == NULL)
-            return error(ERROR_NO_MEMORY, "Failed to allocate memory for queue!");
+        if (q->e == NULL) exit_on_error(error(ERROR_NO_MEMORY, "Failed to allocate memory for queue!"));
     }
 
-    if (q->f == (size_t)-1) {
-        q->f = 0;
-    }
+    if (q->f == (size_t)-1) q->f = 0;
 
     q->e[q->b] = val;
-
-    return error(ERROR_NO_ERROR, NULL);
 }
 
-token_t queue_dequeue(queue_t *q)
+_token queue_dequeue(queue_t *q)
 {
-    if (queue_is_empty(q)) {
-        log_on_error(error(ERROR_QUEUE_EMPTY, "Queue is empty"));
-        return (token_t){0};
-    }
+    if (queue_is_empty(*q)) exit_on_error(error(ERROR_QUEUE_EMPTY, "Queue is empty"));
 
     return q->e[q->f++];
 }
