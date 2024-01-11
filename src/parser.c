@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "token.h"
 #include "tokenizer.h"
 #include "stack.h"
 #include "queue.h"
@@ -8,87 +9,69 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
+error_t shunting_yard(tokens_t tokens, queue_t *rpn)
 {
-    error_t e;
+    stack_t op_stack = stack_init();
+    queue_t res = queue_init();
 
-    stack_t op_stack;
-    e = stack_init(&op_stack);
-    return_on_error(e);
-
-    queue_t res;
-    e = queue_init(&res);
-    return_on_error(e);
-
-    for (size_t i = 0; i < count; i++) {
-        token_t t = tokens[i];
+    for (size_t i = 0; i < tokens.s; i++) {
+        _token t = tokens.e[i];
 
         switch (t.t) {
             case T_NUMBER:
-                e = queue_enqueue(&res, t);
-                return_on_error(e);
+                queue_enqueue(&res, t);
             break;
 
             case T_FUNCTION:
-                e = stack_push(&op_stack, t);
-                return_on_error(e);
+            case T_LBRACKET:
+                stack_push(&op_stack, t);
             break;
             
             case T_OPERATOR:
-                token_t t2 = stack_peek(&op_stack);
+                _token t2 = stack_peek(&op_stack);
 
-                while (!stack_is_empty(&op_stack) && t2.t == T_OPERATOR &&
+                while (!stack_is_empty(op_stack) && t2.t == T_OPERATOR &&
                        ((t.op.a == ASSOC_LEFT  && (t2.op.p >= t.op.p)) ||
                         (t.op.a == ASSOC_RIGHT && (t2.op.p >  t.op.p)))) {
-                    e = queue_enqueue(&res, stack_pop(&op_stack));
-                    return_on_error(e);
 
+                    queue_enqueue(&res, stack_pop(&op_stack));
                     t2 = stack_peek(&op_stack);
                 }
-                e = stack_push(&op_stack, t);
-                return_on_error(e);
+
+                stack_push(&op_stack, t);
             break;
 
             case T_COMMA:
                 while (stack_peek(&op_stack).t != T_LBRACKET) {
-                    e = queue_enqueue(&res, stack_pop(&op_stack));
-                    return_on_error(e);
+                    queue_enqueue(&res, stack_pop(&op_stack));
                 }
-            break;
-
-            case T_LBRACKET:
-                e = stack_push(&op_stack, t);
-                return_on_error(e);
             break;
 
             case T_RBRACKET:
-                while (!stack_is_empty(&op_stack) && stack_peek(&op_stack).t != T_LBRACKET) {
-                    e = queue_enqueue(&res, stack_pop(&op_stack));
-                    return_on_error(e);
+                while (!stack_is_empty(op_stack) && stack_peek(&op_stack).t != T_LBRACKET) {
+                    queue_enqueue(&res, stack_pop(&op_stack));
                 }
-                if (stack_is_empty(&op_stack))
+                if (stack_is_empty(op_stack))
                     return error(ERROR_MISMATCHED_PARENTHESES, "There are mismatched parentheses in the expression");
 
                 stack_pop(&op_stack);
                 if (stack_peek(&op_stack).t == T_FUNCTION) {
-                    e = queue_enqueue(&res, stack_pop(&op_stack));
-                    return_on_error(e);
+                    queue_enqueue(&res, stack_pop(&op_stack));
                 }
             break;
         }
     }
     
-    while (!stack_is_empty(&op_stack)) {
+    while (!stack_is_empty(op_stack)) {
         if (stack_peek(&op_stack).t == T_LBRACKET)
             return error(ERROR_MISMATCHED_PARENTHESES, "There are mismatched parentheses in the expression");
 
-        e = queue_enqueue(&res, stack_pop(&op_stack));
-        return_on_error(e);
+        queue_enqueue(&res, stack_pop(&op_stack));
     }
 
     *rpn = res;
 
-    free(tokens);
+    tokens_free(tokens);
     stack_free(&op_stack);
 
     return error(ERROR_NO_ERROR, NULL);
@@ -96,44 +79,46 @@ error_t shunting_yard(token_t tokens[], size_t count, queue_t *rpn)
 
 error_t eval_rpn(queue_t rpn, double *result)
 {
-    error_t e;
+    stack_t res = stack_init();
 
-    stack_t res;
-    e = stack_init(&res);
-    return_on_error(e);
+    while(!queue_is_empty(rpn)) {
+        _token t = queue_dequeue(&rpn);
 
-    while(!queue_is_empty(&rpn)) {
-        token_t t = queue_dequeue(&rpn);
+        switch (t.t) {
+            case T_NUMBER:
+                stack_push(&res, t);
+            break;
 
-        if (t.t == T_NUMBER) {
-            e = stack_push(&res, t);
-            return_on_error(e);
-        } else if (t.t == T_OPERATOR || t.t == T_FUNCTION) {
-            double *nums = (double *) malloc(t.op.argc * sizeof (double));
-            double ans;
+            case T_OPERATOR:
+            case T_FUNCTION:
+                double *nums = (double *) malloc(t.op.argc * sizeof (double));
+                double ans;
 
-            if (nums == NULL)
-                return error(ERROR_NO_MEMORY, "Failed to allocate memory for function parameters of \'%s\'", t.op.c);
-            
-            for (size_t i = t.op.argc - 1; i < t.op.argc; i--) {
-                nums[i] = stack_pop(&res).n;
-            }
-            
-            ans = (*t.op.o)(nums);
-            free(nums);
+                if (nums == NULL && t.op.argc != 0)
+                    exit_on_error(error(ERROR_NO_MEMORY, "Failed to allocate memory for function parameters of \'%s\'", t.op.name));
+                
+                for (size_t i = t.op.argc - 1; i < t.op.argc; i--) {
+                    nums[i] = stack_pop(&res).n;
+                }
+                
+                ans = (*t.op.o)(nums);
+                free(nums);
 
-            if (isnan(ans)) {
-                return error(ERROR_CALCULATION, "Failed to calculate \'%s()\'", t.op.c);
-            }
+                if (isnan(ans)) {
+                    return error(ERROR_CALCULATION, "Failed to calculate \'%s()\'", t.op.name);
+                }
 
-            t.n = ans;
-            e = stack_push(&res, t);
-            return_on_error(e);
+                t.n = ans;
+                stack_push(&res, t);
+            break;
+
+            default:
+            return error(ERROR_EVALUATING_EXPRESSION, "Found unallowed token");
         }
     }
 
-    if (res.c != 0) {
-        exit(-10);
+    if (res.s != 1) {
+        return error(ERROR_EVALUATING_EXPRESSION, "Found tokens in stack");
     }
 
     *result = stack_peek(&res).n;
@@ -146,20 +131,19 @@ error_t eval_rpn(queue_t rpn, double *result)
 
 double evaluate(char exp[])
 {
-    token_t *toks;
-    size_t count;
+    tokens_t toks;
     queue_t rpn;
     double result;
     error_t e;
 
-    e = tokenize(exp, &toks, &count);
-    log_on_error(e);
+    e = tokenize(exp, &toks);
+    exit_on_error(e);
 
-    e = shunting_yard(toks, count, &rpn);
-    log_on_error(e);
+    e = shunting_yard(toks, &rpn);
+    exit_on_error(e);
 
     e = eval_rpn(rpn, &result);
-    log_on_error(e);
+    exit_on_error(e);
 
     return result;
 }
