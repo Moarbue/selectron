@@ -35,7 +35,7 @@ error_t error(int code, const char fmt[], ...)
     return e;
 }
 
-void log_on_error(error_t e)
+void exit_on_error(error_t e)
 {
     if (e.code == ERROR_NO_ERROR) return;
 

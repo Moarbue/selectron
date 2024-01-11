@@ -25,6 +25,6 @@ typedef struct {
 
 #define return_on_error(e) if ((e).code != ERROR_NO_ERROR) return e
 error_t error(int code, const char fmt[], ...);
-void log_on_error(error_t e);
+void exit_on_error(error_t e);
 
 #endif // ERROR_H_
