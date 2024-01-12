@@ -28,6 +28,7 @@ error_t shunting_yard(tokens_t tokens, queue_t *rpn)
             break;
             
             case T_OPERATOR:
+            {
                 _token t2 = stack_peek(&op_stack);
 
                 while (!stack_is_empty(op_stack) && t2.t == T_OPERATOR &&
@@ -39,6 +40,7 @@ error_t shunting_yard(tokens_t tokens, queue_t *rpn)
                 }
 
                 stack_push(&op_stack, t);
+            }
             break;
 
             case T_COMMA:
@@ -91,6 +93,7 @@ error_t eval_rpn(queue_t rpn, double *result)
 
             case T_OPERATOR:
             case T_FUNCTION:
+            {
                 double *nums = (double *) malloc(t.op.argc * sizeof (double));
                 double ans;
 
@@ -110,6 +113,7 @@ error_t eval_rpn(queue_t rpn, double *result)
 
                 t.n = ans;
                 stack_push(&res, t);
+            }
             break;
 
             default:
