@@ -198,8 +198,6 @@ error_t tokenize(const char exp[], tokens_t *tokens)
     if (t.s == 0)
         return error(ERROR_EXPRESSION_EMTPY, "Input expression is empty!");
 
-    tokens_print(t);
-
     *tokens = t;
 
     return error(ERROR_NO_ERROR, NULL);
